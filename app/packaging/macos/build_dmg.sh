@@ -8,6 +8,8 @@
 #   MACOS_SIGN_IDENTITY   "Developer ID Application: Name (TEAMID)" — sign when set
 #   NOTARIZE=1            notarize and staple both the app and the DMG, then
 #                         verify them with Gatekeeper (spctl)
+#   MACOS_KEYCHAIN        keychain holding the identity (CI); unlocked and
+#                         passed to codesign when set
 #   ASC_KEY_PATH, APP_STORE_CONNECT_KEY_IDENTIFIER, APP_STORE_CONNECT_ISSUER_ID
 #                         App Store Connect API key used for notarization
 set -euo pipefail
@@ -26,12 +28,17 @@ mkdir -p "$DIST"
 
 if [ -n "$IDENTITY" ]; then
   echo "==> Signing with: $IDENTITY"
+  if [ -n "${MACOS_KEYCHAIN:-}" ]; then
+    security unlock-keychain -p "" "$MACOS_KEYCHAIN"
+  fi
   # Sign nested code first (inside-out), then the app with hardened runtime.
   find "$APP/Contents/Frameworks" -depth \( -name "*.framework" -o -name "*.dylib" \) -print0 |
     while IFS= read -r -d '' item; do
-      codesign --force --options runtime --timestamp --sign "$IDENTITY" "$item"
+      codesign --force --options runtime --timestamp \
+        ${MACOS_KEYCHAIN:+--keychain "$MACOS_KEYCHAIN"} --sign "$IDENTITY" "$item"
     done
   codesign --force --options runtime --timestamp \
+    ${MACOS_KEYCHAIN:+--keychain "$MACOS_KEYCHAIN"} \
     --entitlements "$ENTITLEMENTS" --sign "$IDENTITY" "$APP"
   codesign --verify --deep --strict --verbose=2 "$APP"
 else
@@ -79,7 +86,8 @@ hdiutil create -volname "Color Contrast Checker" -srcfolder "$STAGE" -ov -format
 rm -rf "$STAGE"
 
 if [ -n "$IDENTITY" ]; then
-  codesign --force --timestamp --sign "$IDENTITY" "$DMG"
+  codesign --force --timestamp ${MACOS_KEYCHAIN:+--keychain "$MACOS_KEYCHAIN"} \
+    --sign "$IDENTITY" "$DMG"
 fi
 
 if [ "${NOTARIZE:-}" = "1" ]; then

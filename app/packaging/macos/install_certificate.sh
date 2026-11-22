@@ -19,14 +19,14 @@ WORK="$(mktemp -d)"
 trap 'rm -rf "$WORK"' EXIT
 P12="$WORK/developer_id.p12"
 
+# Codemagic's `keychain initialize` creates an unlocked keychain with an empty
+# password and makes it the default.
 keychain initialize
-
-# Apple's Developer ID intermediates; a fresh keychain may not chain to them.
-for ca in DeveloperIDG2CA DeveloperIDCA; do
-  if curl -fsSL -o "$WORK/$ca.cer" "https://www.apple.com/certificateauthority/$ca.cer"; then
-    security import "$WORK/$ca.cer" >/dev/null 2>&1 || true
-  fi
-done
+KEYCHAIN="$(security default-keychain -d user | sed -E 's/^[[:space:]]*"(.*)"[[:space:]]*$/\1/')"
+if [ -z "$KEYCHAIN" ] || [ ! -f "$KEYCHAIN" ]; then
+  KEYCHAIN="$(ls -t "$HOME"/Library/codemagic-cli-tools/keychains/*.keychain-db | head -1)"
+fi
+echo "Signing keychain: $KEYCHAIN"
 
 # Strip whitespace/CRLF that copy-paste (e.g. from PowerShell) can introduce.
 printf '%s' "$MACOS_CERTIFICATE_P12_BASE64" | tr -d ' \r\n\t' | base64 --decode > "$P12"
@@ -46,6 +46,25 @@ if ! keychain add-certificates --certificate "$P12" --certificate-password "$MAC
   keychain add-certificates --certificate "$WORK/legacy.p12" --certificate-password "$MACOS_CERTIFICATE_PASSWORD"
 fi
 
+# Apple's Developer ID intermediates (G2 and the original), imported into the
+# signing keychain so codesign can build the full chain.
+for ca in DeveloperIDG2CA DeveloperIDCA AppleWWDRCAG3; do
+  if curl -fsSL -o "$WORK/$ca.cer" "https://www.apple.com/certificateauthority/$ca.cer"; then
+    security import "$WORK/$ca.cer" -k "$KEYCHAIN" 2>&1 | grep -v "already exists" || true
+  else
+    echo "Could not download $ca.cer" >&2
+  fi
+done
+
+# Let codesign use the private key without a UI prompt (otherwise CI signing
+# fails with errSecInternalComponent).
+security unlock-keychain -p "" "$KEYCHAIN"
+security set-keychain-settings "$KEYCHAIN"
+security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "" "$KEYCHAIN" >/dev/null
+
+echo "Certificate chain in the signing keychain:"
+security find-certificate -a "$KEYCHAIN" | grep '"labl"' || true
+
 IDENTITY="$(security find-identity -v -p codesigning | grep "Developer ID Application" | head -1 | sed -E 's/.*"(.*)"/\1/' || true)"
 if [ -z "$IDENTITY" ]; then
   echo "No valid 'Developer ID Application' identity after import. Identities found:" >&2
@@ -62,4 +81,5 @@ chmod 600 "$KEY_PATH"
 if [ -n "${CM_ENV:-}" ]; then
   echo "MACOS_SIGN_IDENTITY=$IDENTITY" >> "$CM_ENV"
   echo "ASC_KEY_PATH=$KEY_PATH" >> "$CM_ENV"
+  echo "MACOS_KEYCHAIN=$KEYCHAIN" >> "$CM_ENV"
 fi
