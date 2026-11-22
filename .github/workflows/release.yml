@@ -73,10 +73,16 @@ jobs:
             --display-name "Color Contrast Checker" \
             --version "${{ steps.v.outputs.version }}.0" \
             --logo-path assets/images/app_icon.png \
-            --output-path ../dist --output-name ColorContrastChecker-Windows
+            --output-path ../msix --output-name ColorContrastChecker-Windows
+      - name: Upload MSIX (for Partner Center, not the public release)
+        if: ${{ vars.MSIX_IDENTITY_NAME != '' && vars.MSIX_PUBLISHER != '' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: store-msix
+          path: msix/*.msix
       - uses: actions/upload-artifact@v4
         with:
-          name: windows
+          name: release-windows
           path: dist/*
 
   linux:
@@ -101,7 +107,7 @@ jobs:
         run: VERSION=${{ steps.v.outputs.version }} app/packaging/linux/build_packages.sh
       - uses: actions/upload-artifact@v4
         with:
-          name: linux
+          name: release-linux
           path: dist/*
 
   publish:
@@ -111,6 +117,7 @@ jobs:
     steps:
       - uses: actions/download-artifact@v4
         with:
+          pattern: release-*
           path: dist
           merge-multiple: true
       - uses: softprops/action-gh-release@v2
