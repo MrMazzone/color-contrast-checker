@@ -186,8 +186,52 @@ function setupChecker() {
   render();
 }
 
+// Tags download links so PostHog autocapture can break downloads down by platform and format.
+// Runs after setupDownloadButtons() so the auto-detected primary button is tagged too.
+const DOWNLOAD_TAGS = {
+  "ColorContrastChecker-Windows-Setup.exe": ["windows", "installer"],
+  "ColorContrastChecker-Windows-Portable.zip": ["windows", "zip"],
+  "ColorContrastChecker-macOS.dmg": ["mac", "dmg"],
+  "ColorContrastChecker-Linux-x86_64.AppImage": ["linux", "appimage"],
+  "ColorContrastChecker-Linux-amd64.deb": ["linux", "deb"],
+  "ColorContrastChecker-Linux-x86_64.tar.gz": ["linux", "tar.gz"],
+};
+
+function tagDownloadLinks() {
+  document.querySelectorAll(`a[href^="${RELEASES}"]`).forEach((el) => {
+    const tags = DOWNLOAD_TAGS[el.getAttribute("href").slice(RELEASES.length)];
+    if (!tags) return;
+    el.dataset.phCaptureAttributePlatform = tags[0];
+    el.dataset.phCaptureAttributeFormat = tags[1];
+    el.dataset.phCaptureAttributePlacement = el.hasAttribute("data-download-primary") ? "hero" : "platform-list";
+  });
+}
+
+// PostHog web analytics. Cookieless: nothing is stored in cookies or local storage.
+// The color checker is marked ph-no-capture in the HTML so colors are never sent.
+// Skipped on local previews (anything not served over https).
+function loadAnalytics() {
+  if (location.protocol !== "https:") return;
+  const s = document.createElement("script");
+  s.src = "https://us-assets.i.posthog.com/static/array.js";
+  s.async = true;
+  s.crossOrigin = "anonymous";
+  s.onload = () => {
+    window.posthog.init("phc_xFY39vhaiknaR53sYzTyuVw3Xcid5efM5bBVkWvSXdCS", {
+      api_host: "https://us.i.posthog.com",
+      defaults: "2026-08-30",
+      cookieless_mode: "always",
+      disable_session_recording: true,
+      disable_surveys: true,
+    });
+  };
+  document.head.appendChild(s);
+}
+
 setupDownloadButtons();
+tagDownloadLinks();
 setupChecker();
+loadAnalytics();
 
 const year = document.querySelector("[data-year]");
 if (year) year.textContent = String(new Date().getFullYear());
