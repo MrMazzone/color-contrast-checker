@@ -25,6 +25,10 @@
 
 Ratios are truncated to two decimals, never rounded up, so 4.499:1 reads 4.49 and fails. Pass and fail always use the exact value.
 
+## Support
+
+Color Contrast Checker is free and open source. If it saves you time, you can [buy me a coffee](https://www.buymeacoffee.com/JoeMazzone) ☕
+
 ## Repository layout
 
 | Path | What it is |

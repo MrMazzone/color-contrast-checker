@@ -898,6 +898,28 @@ p {
   }
 }
 
+/* Support (Buy me a coffee) */
+.support {
+  margin-top: 28px;
+  padding: 20px 24px;
+  border: 1px dashed var(--rule-strong);
+  border-radius: 16px;
+  background: var(--paper-2);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px 24px;
+}
+.support p {
+  margin: 0;
+  color: var(--ink-2);
+  max-width: var(--measure);
+}
+.support .btn {
+  flex: none;
+}
+
 /* FAQ */
 .faq {
   border-top: 1px solid var(--rule);

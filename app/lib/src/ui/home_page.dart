@@ -20,6 +20,7 @@ import 'widgets/results_section.dart';
 
 const websiteUrl = 'https://color-contrast.joemazzone.net';
 const repoUrl = 'https://github.com/MrMazzone/color-contrast-checker';
+const donateUrl = 'https://www.buymeacoffee.com/JoeMazzone';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -394,6 +395,11 @@ class _TopBar extends StatelessWidget {
             TextButton(
               onPressed: () => launchUrl(Uri.parse(websiteUrl)),
               child: const Text('color-contrast.joemazzone.net'),
+            ),
+            TextButton.icon(
+              onPressed: () => launchUrl(Uri.parse(donateUrl)),
+              icon: const Icon(Icons.coffee_outlined, size: 18),
+              label: const Text('Buy me a coffee'),
             ),
           ],
         ),
