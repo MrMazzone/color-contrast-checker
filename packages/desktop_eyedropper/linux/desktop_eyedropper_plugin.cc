@@ -202,8 +202,9 @@ void Finish(PickSession* s, bool picked) {
 }
 
 void MovePointer(PickSession* s, double dx, double dy) {
-  s->x = std::clamp(s->x + dx, 0.0, static_cast<double>(s->width - 1));
-  s->y = std::clamp(s->y + dy, 0.0, static_cast<double>(s->height - 1));
+  // std::min/max rather than std::clamp: the Linux runner builds as C++14.
+  s->x = std::max(0.0, std::min(s->x + dx, static_cast<double>(s->width - 1)));
+  s->y = std::max(0.0, std::min(s->y + dy, static_cast<double>(s->height - 1)));
   if (s->seat != nullptr) {
     GdkDevice* pointer = gdk_seat_get_pointer(s->seat);
     if (pointer != nullptr) {

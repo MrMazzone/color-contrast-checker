@@ -14,6 +14,11 @@
 // are physical pixels. The loupe is scaled by the DPI of the monitor under
 // the cursor.
 
+// windows.h defines min/max macros that break std::min/std::max.
+#ifndef NOMINMAX
+#define NOMINMAX
+#endif
+
 #include "desktop_eyedropper_plugin.h"
 
 // clang-format off
