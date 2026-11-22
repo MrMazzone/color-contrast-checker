@@ -1,0 +1,446 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Color Contrast Checker — WCAG 2.1 contrast app for Windows, macOS and Linux</title>
+    <meta
+      name="description"
+      content="Free desktop app that checks color contrast against WCAG 2.1 AA and AAA. Pick colors from anywhere on your screen with a system-wide eyedropper and get the closest accessible alternative."
+    />
+    <link rel="canonical" href="https://color-contrast.joemazzone.net/" />
+    <meta name="theme-color" content="#4338CA" />
+    <link rel="icon" href="favicon.ico" sizes="any" />
+    <link rel="icon" type="image/png" sizes="64x64" href="assets/img/favicon-64.png" />
+    <link rel="apple-touch-icon" href="assets/img/apple-touch-icon.png" />
+    <link rel="manifest" href="site.webmanifest" />
+
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Color Contrast Checker" />
+    <meta property="og:title" content="Color Contrast Checker" />
+    <meta
+      property="og:description"
+      content="WCAG 2.1 AA & AAA contrast checks with an eyedropper that works anywhere on your screen. Free for Windows, macOS and Linux."
+    />
+    <meta property="og:url" content="https://color-contrast.joemazzone.net/" />
+    <meta property="og:image" content="https://color-contrast.joemazzone.net/assets/img/og-image.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta name="twitter:card" content="summary_large_image" />
+
+    <link rel="preload" href="assets/fonts/inter-800.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href="assets/fonts/inter-400.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="stylesheet" href="assets/css/site.css" />
+
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "SoftwareApplication",
+        "name": "Color Contrast Checker",
+        "applicationCategory": "DeveloperApplication",
+        "operatingSystem": "Windows, macOS, Linux",
+        "description": "Desktop app that checks color contrast against WCAG 2.1 AA and AAA, with a system-wide eyedropper and accessible color suggestions.",
+        "url": "https://color-contrast.joemazzone.net/",
+        "downloadUrl": "https://color-contrast.joemazzone.net/download.html",
+        "image": "https://color-contrast.joemazzone.net/assets/img/icon-512.png",
+        "screenshot": "https://color-contrast.joemazzone.net/assets/img/screens/app-light.webp",
+        "license": "https://opensource.org/licenses/MIT",
+        "isAccessibleForFree": true,
+        "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+        "author": { "@type": "Person", "name": "Joe Mazzone", "url": "https://joemazzone.net" }
+      }
+    </script>
+    <script type="module" src="assets/js/site.js"></script>
+  </head>
+  <body>
+    <a class="skip-link" href="#main">Skip to content</a>
+
+    <div class="hero-band">
+      <header class="site-header">
+        <div class="wrap">
+          <a class="brand" href="./">
+            <img src="assets/img/icon-192.png" alt="" width="36" height="36" />
+            Color Contrast Checker
+          </a>
+          <nav class="site-nav" aria-label="Main">
+            <a class="nav-optional" href="#eyedropper">Eyedropper</a>
+            <a class="nav-optional" href="#wcag">WCAG 2.1</a>
+            <a href="download.html">Download</a>
+            <a class="nav-optional-sm" href="https://github.com/MrMazzone/color-contrast-checker">GitHub</a>
+          </nav>
+        </div>
+      </header>
+
+      <main id="main">
+        <section class="wrap hero" aria-labelledby="hero-title">
+          <div class="hero-intro">
+            <h1 id="hero-title">Check the contrast of any color on your screen.</h1>
+            <p class="lede">
+              A free desktop app for Windows, macOS and Linux. Pick colors with an eyedropper that works
+              anywhere, see WCAG&nbsp;2.1 AA and AAA results instantly, and get the closest color that passes.
+            </p>
+            <div class="hero-actions">
+              <a class="btn btn-primary" href="download.html" data-download-primary>
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2.4"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M12 4v11m0 0l-4.5-4.5M12 15l4.5-4.5M5 19.5h14"
+                  />
+                </svg>
+                <span data-label>Download</span>
+              </a>
+              <a class="text-link" href="download.html">All platforms and install notes</a>
+            </div>
+            <p class="hero-note">Free and open source. Works offline. No account.</p>
+          </div>
+
+            <form class="try" data-checker onsubmit="return false" aria-label="Try the contrast checker">
+              <div class="try-fields">
+                <div class="color-field">
+                  <label for="fg-text">Text color</label>
+                  <div class="color-input">
+                    <input type="color" id="fg-pick" value="#7c7cf8" aria-label="Choose text color" />
+                    <input
+                      type="text"
+                      id="fg-text"
+                      value="#7C7CF8"
+                      spellcheck="false"
+                      autocomplete="off"
+                      inputmode="text"
+                      aria-describedby="color-help"
+                    />
+                  </div>
+                </div>
+                <button type="button" class="swap" data-swap aria-label="Swap text and background colors">
+                  <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <path
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2.2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      d="M7 7h11l-3-3M17 17H6l3 3"
+                    />
+                  </svg>
+                </button>
+                <div class="color-field">
+                  <label for="bg-text">Background color</label>
+                  <div class="color-input">
+                    <input type="color" id="bg-pick" value="#ffffff" aria-label="Choose background color" />
+                    <input
+                      type="text"
+                      id="bg-text"
+                      value="#FFFFFF"
+                      spellcheck="false"
+                      autocomplete="off"
+                      aria-describedby="color-help"
+                    />
+                  </div>
+                </div>
+              </div>
+              <p id="color-help" class="hero-note" style="margin-top: 0">
+                Type hex, rgb(), hsl() or a color name.
+              </p>
+              <p class="sr-only" data-ratio-text aria-live="polite"></p>
+              <div class="results-row" data-pills></div>
+              <div class="suggest" data-suggest hidden aria-live="polite"></div>
+            </form>
+
+          <div class="specimen" aria-hidden="true">
+            <div class="card card-back">
+              <div class="chip-row">
+                <div class="chip" data-chip-fg style="background: #7c7cf8"><span>#7C7CF8</span></div>
+                <div class="chip" data-chip-bg style="background: #ffffff"><span>#FFFFFF</span></div>
+              </div>
+            </div>
+            <div class="card card-front" data-card-front style="color: #7c7cf8; background: #ffffff">
+              <span class="sample-big">Aa</span>
+              <span class="sample-line">The five boxing wizards jump quickly.</span>
+              <span class="sample-body">
+                Body text at 16px needs 4.5:1 for AA. This card redraws as you change the colors.
+              </span>
+            </div>
+            <div class="verdict" data-verdict data-state="limited">
+              <span class="ratio">3.44<small>:1</small></span>
+              <span class="verdict-label">Large text only</span>
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <section class="section" id="eyedropper" aria-labelledby="eyedropper-title">
+      <div class="wrap">
+        <div class="section-head">
+          <h2 id="eyedropper-title">An eyedropper that isn’t stuck inside a browser tab.</h2>
+          <p class="lede">
+            Press <span class="mono">Ctrl+1</span> (<span class="mono">⌘1</span> on a Mac) and click anything: a
+            design file, a PDF, a video frame, another app. The color lands in the checker and every result updates.
+          </p>
+        </div>
+        <figure class="shot" style="margin: 0">
+          <picture>
+            <source
+              media="(prefers-color-scheme: dark)"
+              srcset="assets/img/screens/app-dark-1x.webp 1440w, assets/img/screens/app-dark.webp 2880w"
+              sizes="(min-width: 1160px) 1112px, 100vw"
+            />
+            <img
+              src="assets/img/screens/app-light-1x.webp"
+              srcset="assets/img/screens/app-light-1x.webp 1440w, assets/img/screens/app-light.webp 2880w"
+              sizes="(min-width: 1160px) 1112px, 100vw"
+              width="1440"
+              height="1180"
+              loading="lazy"
+              decoding="async"
+              alt="Color Contrast Checker app window. Foreground and background panels with hex fields, eyedropper buttons, opacity and lightness sliders on the left; on the right a large contrast ratio, WCAG 2.1 pass and fail results for normal text, large text and UI components, and a list of better alternative colors."
+            />
+          </picture>
+        </figure>
+        <div class="picker-notes">
+          <div>
+            <h3>macOS</h3>
+            <p>Uses Apple’s own color sampler and magnifier. No Screen Recording permission needed.</p>
+          </div>
+          <div>
+            <h3>Windows</h3>
+            <p>
+              Freezes the screen under a magnifier loupe, so you can pick from menus and hover states. Arrow keys move
+              one pixel at a time.
+            </p>
+          </div>
+          <div>
+            <h3>Linux</h3>
+            <p>Uses your desktop’s color picker on GNOME and KDE, Wayland or X11, with a built-in fallback for X11.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" aria-labelledby="features-title">
+      <div class="wrap">
+        <div class="section-head">
+          <h2 id="features-title">All of WCAG 2.1 contrast, in one window.</h2>
+        </div>
+        <dl class="feature-list">
+          <div>
+            <dt>Every WCAG 2.1 contrast criterion</dt>
+            <dd>
+              Normal text, large text, and graphics and UI components, at AA and AAA, each with a live preview in your
+              colors.
+            </dd>
+          </div>
+          <div>
+            <dt>Better alternatives</dt>
+            <dd>
+              When a pair fails, the app finds the closest colors that pass while keeping your hue, ordered by how
+              little they change. Change the text or the background, aim for AA or AAA, and apply with one click.
+            </dd>
+          </div>
+          <div>
+            <dt>Ratios you can trust</dt>
+            <dd>
+              Ratios are truncated, never rounded up. A pair at 4.499:1 reads 4.49 and fails, instead of showing a
+              passing-looking 4.50.
+            </dd>
+          </div>
+          <div>
+            <dt>Opacity and lightness</dt>
+            <dd>
+              Blend a semi-transparent text color over the background exactly as a browser renders it, and slide
+              lightness without losing the hue.
+            </dd>
+          </div>
+          <div>
+            <dt>Paste any color format</dt>
+            <dd>Hex, <span class="mono">rgb()</span>, <span class="mono">hsl()</span> or a CSS color name. Copy results back out as hex, RGB, HSL or a Markdown report.</dd>
+          </div>
+          <div>
+            <dt>Private by design</dt>
+            <dd>No account, no tracking, no network requests. The colors you check never leave your computer.</dd>
+          </div>
+        </dl>
+      </div>
+    </section>
+
+    <section class="section" id="wcag" aria-labelledby="wcag-title">
+      <div class="wrap">
+        <div class="section-head">
+          <h2 id="wcag-title">WCAG 2.1 contrast requirements</h2>
+          <p class="lede">
+            Contrast ratio compares the relative luminance of two colors, from 1:1 (identical) to 21:1 (black on
+            white).
+          </p>
+        </div>
+        <div class="table-scroll" role="region" aria-labelledby="wcag-title" tabindex="0">
+          <table class="req-table">
+            <caption>
+              Minimum contrast ratio by content type and conformance level
+            </caption>
+            <thead>
+              <tr>
+                <th scope="col">Level</th>
+                <th scope="col">Normal text</th>
+                <th scope="col">Large text</th>
+                <th scope="col">Graphics and UI components</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <th scope="row">AA</th>
+                <td><span class="num">4.5:1</span><span class="sc">SC 1.4.3</span></td>
+                <td><span class="num">3:1</span><span class="sc">SC 1.4.3</span></td>
+                <td><span class="num">3:1</span><span class="sc">SC 1.4.11</span></td>
+              </tr>
+              <tr>
+                <th scope="row">AAA</th>
+                <td><span class="num">7:1</span><span class="sc">SC 1.4.6</span></td>
+                <td><span class="num">4.5:1</span><span class="sc">SC 1.4.6</span></td>
+                <td><span class="sc">Not defined</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="footnote">
+          Large text is at least 18&nbsp;point (24px), or 14&nbsp;point (about 18.66px) when bold. Graphics and UI
+          components include icons, chart lines, focus indicators and the borders of form inputs.
+        </p>
+      </div>
+    </section>
+
+    <section class="section" id="download" aria-labelledby="download-title">
+      <div class="wrap">
+        <div class="section-head">
+          <h2 id="download-title">Download</h2>
+          <p class="lede">Free under the MIT license. Each download is the latest release.</p>
+        </div>
+        <div class="downloads">
+          <article class="platform" data-platform="windows">
+            <header>
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path fill="currentColor" d="M3 3h8.5v8.5H3zM12.5 3H21v8.5h-8.5zM3 12.5h8.5V21H3zM12.5 12.5H21V21h-8.5z" />
+              </svg>
+              <h3>Windows</h3>
+            </header>
+            <p>Windows 10 and 11, 64-bit.</p>
+            <a class="btn btn-primary" href="https://github.com/MrMazzone/color-contrast-checker/releases/latest/download/ColorContrastChecker-Windows-Setup.exe">Download installer</a>
+            <ul>
+              <li><a href="https://github.com/MrMazzone/color-contrast-checker/releases/latest/download/ColorContrastChecker-Windows-Portable.zip">Portable .zip</a></li>
+            </ul>
+          </article>
+          <article class="platform" data-platform="mac">
+            <header>
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  d="M9 9V6.5A2.5 2.5 0 1 0 6.5 9H9zm0 0h6m-6 0v6m6-6V6.5A2.5 2.5 0 1 1 17.5 9H15zm0 0v6m0 0h2.5a2.5 2.5 0 1 1-2.5 2.5V15zm0 0H9m0 0v2.5A2.5 2.5 0 1 1 6.5 15H9z"
+                />
+              </svg>
+              <h3>macOS</h3>
+            </header>
+            <p>macOS 12 Monterey or later. Universal app for Apple silicon and Intel, signed and notarized.</p>
+            <a class="btn btn-primary" href="https://github.com/MrMazzone/color-contrast-checker/releases/latest/download/ColorContrastChecker-macOS.dmg">Download .dmg</a>
+          </article>
+          <article class="platform" data-platform="linux">
+            <header>
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  d="M3 5h18v14H3zM7 10l3 2.5L7 15m5 0h5"
+                />
+              </svg>
+              <h3>Linux</h3>
+            </header>
+            <p>64-bit, with GTK 3.</p>
+            <a class="btn btn-primary" href="https://github.com/MrMazzone/color-contrast-checker/releases/latest/download/ColorContrastChecker-Linux-x86_64.AppImage">Download AppImage</a>
+            <ul>
+              <li><a href="https://github.com/MrMazzone/color-contrast-checker/releases/latest/download/ColorContrastChecker-Linux-amd64.deb">.deb for Debian and Ubuntu</a></li>
+              <li><a href="https://github.com/MrMazzone/color-contrast-checker/releases/latest/download/ColorContrastChecker-Linux-x86_64.tar.gz">.tar.gz</a></li>
+            </ul>
+          </article>
+        </div>
+        <p class="footnote">
+          Need help installing? Read the <a href="download.html">install notes for each platform</a>, or browse
+          <a href="https://github.com/MrMazzone/color-contrast-checker/releases">all releases on GitHub</a>.
+        </p>
+      </div>
+    </section>
+
+    <section class="section" aria-labelledby="faq-title">
+      <div class="wrap">
+        <div class="section-head">
+          <h2 id="faq-title">Questions</h2>
+        </div>
+        <div class="faq">
+          <details>
+            <summary>Why does another checker show a slightly different number?</summary>
+            <div>
+              <p>
+                Some tools round the ratio; this app truncates it to two decimals, the way WebAIM does. Red on white
+                is 3.998:1, so it shows 3.99 here and 4.00 elsewhere. Pass and fail always use the exact value.
+              </p>
+            </div>
+          </details>
+          <details>
+            <summary>Does the eyedropper need special permissions?</summary>
+            <div>
+              <p>
+                No. On macOS it uses the system color sampler, which works without Screen Recording permission. On
+                Windows and Linux it reads the screen only while you are picking.
+              </p>
+            </div>
+          </details>
+          <details>
+            <summary>Does it work on Wayland?</summary>
+            <div>
+              <p>
+                Yes, through the desktop portal color picker that GNOME and KDE provide. On X11 without a portal the app
+                uses its own magnifier overlay.
+              </p>
+            </div>
+          </details>
+          <details>
+            <summary>How are semi-transparent colors handled?</summary>
+            <div>
+              <p>
+                The text color is blended over the background before measuring, exactly as a browser draws it. The app
+                shows the resulting solid color so you can use it directly.
+              </p>
+            </div>
+          </details>
+          <details>
+            <summary>Is it really free?</summary>
+            <div>
+              <p>
+                Yes. It is open source under the MIT license, with no ads, accounts or tracking. The source is on
+                <a href="https://github.com/MrMazzone/color-contrast-checker">GitHub</a>.
+              </p>
+            </div>
+          </details>
+        </div>
+      </div>
+    </section>
+
+    <footer class="site-footer">
+      <div class="wrap">
+        <p>© <span data-year>2026</span> <a href="https://joemazzone.net">Joe Mazzone</a>. MIT License.</p>
+        <nav aria-label="Footer">
+          <a href="download.html">Download</a>
+          <a href="privacy.html">Privacy</a>
+          <a href="https://github.com/MrMazzone/color-contrast-checker">Source code</a>
+          <a href="https://github.com/MrMazzone/color-contrast-checker/issues">Report a problem</a>
+        </nav>
+      </div>
+    </footer>
+  </body>
+</html>

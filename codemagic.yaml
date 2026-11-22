@@ -1,0 +1,101 @@
+# Codemagic builds for Color Contrast Checker.
+#
+# macos-ci       Manual, unsigned build — proves the macOS app builds.
+# macos-release  Runs on v* tags: builds a universal app, signs it with the
+#                Developer ID certificate, notarizes and staples the DMG, and
+#                uploads it to the GitHub release for the tag.
+#
+# Windows and Linux are built by GitHub Actions (.github/workflows/release.yml):
+# Codemagic personal accounts only have macOS M2 machines.
+#
+# Secrets live in app-level environment variable groups in the Codemagic UI:
+#   apple_signing:
+#     MACOS_CERTIFICATE_P12_BASE64   base64 of the Developer ID Application .p12
+#     MACOS_CERTIFICATE_PASSWORD     password for the .p12
+#     APP_STORE_CONNECT_ISSUER_ID    App Store Connect API key issuer ID
+#     APP_STORE_CONNECT_KEY_IDENTIFIER  API key ID
+#     APP_STORE_CONNECT_PRIVATE_KEY  contents of the AuthKey_XXXX.p8 file
+#   github:
+#     GITHUB_TOKEN                   fine-grained token with Contents: read/write on this repo
+
+definitions:
+  flutter_version: &flutter_version 3.47.2
+  scripts:
+    - &get_packages
+      name: Get packages
+      script: flutter pub get
+    - &core_tests
+      name: Core tests
+      script: cd packages/wcag_contrast && dart test
+
+workflows:
+  macos-ci:
+    name: macOS build (unsigned)
+    instance_type: mac_mini_m2
+    max_build_duration: 45
+    environment:
+      flutter: *flutter_version
+      xcode: latest
+      cocoapods: default
+    scripts:
+      - *get_packages
+      - *core_tests
+      - name: Build macOS app
+        script: cd app && flutter build macos --release
+      - name: Package unsigned DMG
+        script: app/packaging/macos/build_dmg.sh
+    artifacts:
+      - dist/*.dmg
+
+  macos-release:
+    name: macOS release (signed + notarized)
+    instance_type: mac_mini_m2
+    max_build_duration: 60
+    environment:
+      flutter: *flutter_version
+      xcode: latest
+      cocoapods: default
+      groups:
+        - apple_signing
+        - github
+    triggering:
+      events:
+        - tag
+      tag_patterns:
+        - pattern: "v*"
+          include: true
+    scripts:
+      - name: Install Developer ID certificate
+        script: |
+          set -e
+          keychain initialize
+          echo "$MACOS_CERTIFICATE_P12_BASE64" | base64 --decode > /tmp/developer_id.p12
+          keychain add-certificates \
+            --certificate /tmp/developer_id.p12 \
+            --certificate-password "$MACOS_CERTIFICATE_PASSWORD"
+          rm /tmp/developer_id.p12
+          IDENTITY=$(security find-identity -v -p codesigning | grep "Developer ID Application" | head -1 | sed -E 's/.*"(.*)"/\1/')
+          if [ -z "$IDENTITY" ]; then echo "No Developer ID Application identity found" >&2; exit 1; fi
+          echo "Signing identity: $IDENTITY"
+          echo "MACOS_SIGN_IDENTITY=$IDENTITY" >> "$CM_ENV"
+      - name: Write App Store Connect API key
+        script: |
+          echo "$APP_STORE_CONNECT_PRIVATE_KEY" > /tmp/AuthKey.p8
+          echo "ASC_KEY_PATH=/tmp/AuthKey.p8" >> "$CM_ENV"
+      - *get_packages
+      - *core_tests
+      - name: Build macOS app
+        script: |
+          VERSION="${CM_TAG#v}"
+          cd app && flutter build macos --release --build-name="$VERSION" --build-number="$BUILD_NUMBER"
+      - name: Sign, package and notarize
+        script: NOTARIZE=1 app/packaging/macos/build_dmg.sh
+      - name: Upload to GitHub release
+        script: |
+          set -e
+          # The GitHub Actions release workflow creates the release for this
+          # tag; create it here if Codemagic finishes first.
+          gh release view "$CM_TAG" >/dev/null 2>&1 || gh release create "$CM_TAG" --title "$CM_TAG" --generate-notes
+          gh release upload "$CM_TAG" dist/ColorContrastChecker-macOS.dmg --clobber
+    artifacts:
+      - dist/*.dmg

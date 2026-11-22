@@ -1,0 +1,11 @@
+name: color_contrast_workspace
+description: Workspace root for the Color Contrast Checker monorepo.
+publish_to: none
+
+environment:
+  sdk: ^3.10.0
+
+workspace:
+  - app
+  - packages/wcag_contrast
+  - packages/desktop_eyedropper

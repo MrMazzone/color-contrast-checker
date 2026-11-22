@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop-application">
+  <id>net.joemazzone.colorcontrast</id>
+  <name>Color Contrast Checker</name>
+  <summary>Check color contrast against WCAG 2.1 with a screen eyedropper</summary>
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>MIT</project_license>
+  <developer id="net.joemazzone">
+    <name>Joe Mazzone</name>
+  </developer>
+  <description>
+    <p>
+      Check foreground and background color pairs against the WCAG 2.1 contrast
+      requirements for normal text, large text and user interface components,
+      at levels AA and AAA.
+    </p>
+    <p>
+      Pick colors from anywhere on the screen, adjust opacity and lightness, and
+      get the closest accessible alternatives that keep your hue.
+    </p>
+  </description>
+  <launchable type="desktop-id">net.joemazzone.colorcontrast.desktop</launchable>
+  <url type="homepage">https://color-contrast.joemazzone.net</url>
+  <url type="bugtracker">https://github.com/MrMazzone/color-contrast-checker/issues</url>
+  <url type="vcs-browser">https://github.com/MrMazzone/color-contrast-checker</url>
+  <screenshots>
+    <screenshot type="default">
+      <image>https://color-contrast.joemazzone.net/assets/img/screens/app-light-1x.webp</image>
+    </screenshot>
+  </screenshots>
+  <content_rating type="oars-1.1" />
+  <releases>
+    <release version="1.0.0" date="2026-11-22" />
+  </releases>
+</component>

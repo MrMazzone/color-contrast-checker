@@ -1,0 +1,76 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+    paths-ignore: ["website/**", "**.md"]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  FLUTTER_VERSION: "3.47.2"
+
+jobs:
+  test:
+    name: Analyze & test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: stable
+          cache: true
+      - run: flutter pub get
+      - name: Check formatting
+        run: dart format --output=none --set-exit-if-changed packages/wcag_contrast packages/desktop_eyedropper/lib packages/desktop_eyedropper/test app/lib app/test
+      - name: Analyze
+        run: |
+          (cd packages/wcag_contrast && dart analyze --fatal-infos)
+          (cd packages/desktop_eyedropper && flutter analyze)
+          (cd app && flutter analyze)
+      - name: Core tests
+        working-directory: packages/wcag_contrast
+        run: dart test
+      - name: Plugin tests
+        working-directory: packages/desktop_eyedropper
+        run: flutter test
+      - name: App tests
+        working-directory: app
+        run: flutter test --exclude-tags screenshots
+
+  build-linux:
+    name: Build Linux
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+      - run: sudo apt-get update && sudo apt-get install -y ninja-build libgtk-3-dev
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: stable
+          cache: true
+      - working-directory: app
+        run: flutter build linux --release
+
+  build-windows:
+    name: Build Windows
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: stable
+          cache: true
+      - working-directory: app
+        run: flutter build windows --release
+      - uses: actions/upload-artifact@v4
+        with:
+          name: windows-ci-build
+          path: app/build/windows/x64/runner/Release/
+          retention-days: 7

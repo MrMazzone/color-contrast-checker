@@ -1,0 +1,26 @@
+# Build outputs
+dist/
+build/
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+pubspec_overrides.yaml
+
+# Golden screenshots are regenerated on demand (see README)
+app/test/screenshots/
+app/test/failures/
+
+# Editors / OS
+.idea/
+*.iml
+.vscode/
+.DS_Store
+Thumbs.db
+
+# Secrets — never commit signing material
+*.p12
+*.p8
+*.mobileprovision
+*.keystore
+.env

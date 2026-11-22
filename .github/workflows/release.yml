@@ -1,0 +1,120 @@
+name: Release (Windows & Linux)
+
+# Push a tag like v1.0.0 to build installers and attach them to the GitHub
+# release. macOS is built, signed and notarized by Codemagic (codemagic.yaml)
+# from the same tag and uploaded to the same release.
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version to build (e.g. 1.0.0). Builds artifacts only; no release."
+        required: true
+
+permissions:
+  contents: write
+
+env:
+  FLUTTER_VERSION: "3.47.2"
+
+jobs:
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: stable
+          cache: true
+      - name: Resolve version
+        id: v
+        shell: bash
+        run: |
+          if [ "${GITHUB_REF_TYPE}" = "tag" ]; then V="${GITHUB_REF_NAME#v}"; else V="${{ github.event.inputs.version }}"; fi
+          echo "version=$V" >> "$GITHUB_OUTPUT"
+      - name: Build
+        working-directory: app
+        run: flutter build windows --release --build-name=${{ steps.v.outputs.version }} --build-number=${{ github.run_number }}
+      - name: Bundle the Visual C++ runtime
+        shell: pwsh
+        run: |
+          $out = "app/build/windows/x64/runner/Release"
+          foreach ($dll in "msvcp140.dll", "vcruntime140.dll", "vcruntime140_1.dll") {
+            Copy-Item "C:\Windows\System32\$dll" $out
+          }
+      - name: Portable zip
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path dist | Out-Null
+          Compress-Archive -Path app/build/windows/x64/runner/Release/* -DestinationPath dist/ColorContrastChecker-Windows-Portable.zip
+      - name: Installer
+        shell: pwsh
+        run: |
+          if (-not (Get-Command iscc -ErrorAction SilentlyContinue)) {
+            choco install innosetup -y --no-progress
+          }
+          $iscc = (Get-Command iscc -ErrorAction SilentlyContinue).Source
+          if (-not $iscc) { $iscc = "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe" }
+          & $iscc "/DAppVersion=${{ steps.v.outputs.version }}" app/packaging/windows/installer.iss
+      - name: MSIX for the Microsoft Store
+        # Runs once the Store identity is saved as repository variables
+        # (Settings → Secrets and variables → Actions → Variables).
+        if: ${{ vars.MSIX_IDENTITY_NAME != '' && vars.MSIX_PUBLISHER != '' }}
+        working-directory: app
+        shell: bash
+        run: |
+          dart run msix:create --store --build-windows false \
+            --identity-name "${{ vars.MSIX_IDENTITY_NAME }}" \
+            --publisher "${{ vars.MSIX_PUBLISHER }}" \
+            --publisher-display-name "${{ vars.MSIX_PUBLISHER_DISPLAY_NAME || 'Joe Mazzone' }}" \
+            --display-name "Color Contrast Checker" \
+            --version "${{ steps.v.outputs.version }}.0" \
+            --logo-path assets/images/app_icon.png \
+            --output-path ../dist --output-name ColorContrastChecker-Windows
+      - uses: actions/upload-artifact@v4
+        with:
+          name: windows
+          path: dist/*
+
+  linux:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+      - run: sudo apt-get update && sudo apt-get install -y ninja-build libgtk-3-dev libfuse2
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: stable
+          cache: true
+      - name: Resolve version
+        id: v
+        run: |
+          if [ "${GITHUB_REF_TYPE}" = "tag" ]; then V="${GITHUB_REF_NAME#v}"; else V="${{ github.event.inputs.version }}"; fi
+          echo "version=$V" >> "$GITHUB_OUTPUT"
+      - name: Build
+        working-directory: app
+        run: flutter build linux --release --build-name=${{ steps.v.outputs.version }} --build-number=${{ github.run_number }}
+      - name: Package
+        run: VERSION=${{ steps.v.outputs.version }} app/packaging/linux/build_packages.sh
+      - uses: actions/upload-artifact@v4
+        with:
+          name: linux
+          path: dist/*
+
+  publish:
+    if: github.ref_type == 'tag'
+    needs: [windows, linux]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: dist
+          merge-multiple: true
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: dist/*
+          generate_release_notes: true
+          fail_on_unmatched_files: true

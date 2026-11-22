@@ -1,0 +1,12 @@
+[Desktop Entry]
+Type=Application
+Name=Color Contrast Checker
+GenericName=Contrast Checker
+Comment=Check color contrast against WCAG 2.1 and pick colors from anywhere on screen
+Exec=color-contrast-checker
+Icon=net.joemazzone.colorcontrast
+Terminal=false
+Categories=Graphics;Development;Utility;
+Keywords=wcag;contrast;accessibility;a11y;color;colour;eyedropper;picker;
+StartupWMClass=color-contrast-checker
+StartupNotify=true
