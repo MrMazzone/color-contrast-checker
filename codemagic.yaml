@@ -1,9 +1,11 @@
 # Codemagic builds for Color Contrast Checker.
 #
 # macos-ci       Manual, unsigned build — proves the macOS app builds.
+# macos-signed   Manual: signed + notarized DMG as a build artifact only.
+#                Use it to test signing without publishing anything.
 # macos-release  Runs on v* tags: builds a universal app, signs it with the
-#                Developer ID certificate, notarizes and staples the DMG, and
-#                uploads it to the GitHub release for the tag.
+#                Developer ID certificate, notarizes and staples it, and
+#                uploads the DMG to the GitHub release for the tag.
 #
 # Windows and Linux are built by GitHub Actions (.github/workflows/release.yml):
 # Codemagic personal accounts only have macOS M2 machines.
@@ -27,6 +29,12 @@ definitions:
     - &core_tests
       name: Core tests
       script: cd packages/wcag_contrast && dart test
+    - &install_certificate
+      name: Install Developer ID certificate
+      script: app/packaging/macos/install_certificate.sh
+    - &sign_and_notarize
+      name: Sign, notarize and package
+      script: NOTARIZE=1 app/packaging/macos/build_dmg.sh
 
 workflows:
   macos-ci:
@@ -44,6 +52,25 @@ workflows:
         script: cd app && flutter build macos --release
       - name: Package unsigned DMG
         script: app/packaging/macos/build_dmg.sh
+    artifacts:
+      - dist/*.dmg
+
+  macos-signed:
+    name: macOS signed build (test, no publish)
+    instance_type: mac_mini_m2
+    max_build_duration: 60
+    environment:
+      flutter: *flutter_version
+      xcode: latest
+      cocoapods: default
+      groups:
+        - apple_signing
+    scripts:
+      - *install_certificate
+      - *get_packages
+      - name: Build macOS app
+        script: cd app && flutter build macos --release
+      - *sign_and_notarize
     artifacts:
       - dist/*.dmg
 
@@ -65,31 +92,14 @@ workflows:
         - pattern: "v*"
           include: true
     scripts:
-      - name: Install Developer ID certificate
-        script: |
-          set -e
-          keychain initialize
-          echo "$MACOS_CERTIFICATE_P12_BASE64" | base64 --decode > /tmp/developer_id.p12
-          keychain add-certificates \
-            --certificate /tmp/developer_id.p12 \
-            --certificate-password "$MACOS_CERTIFICATE_PASSWORD"
-          rm /tmp/developer_id.p12
-          IDENTITY=$(security find-identity -v -p codesigning | grep "Developer ID Application" | head -1 | sed -E 's/.*"(.*)"/\1/')
-          if [ -z "$IDENTITY" ]; then echo "No Developer ID Application identity found" >&2; exit 1; fi
-          echo "Signing identity: $IDENTITY"
-          echo "MACOS_SIGN_IDENTITY=$IDENTITY" >> "$CM_ENV"
-      - name: Write App Store Connect API key
-        script: |
-          echo "$APP_STORE_CONNECT_PRIVATE_KEY" > /tmp/AuthKey.p8
-          echo "ASC_KEY_PATH=/tmp/AuthKey.p8" >> "$CM_ENV"
+      - *install_certificate
       - *get_packages
       - *core_tests
       - name: Build macOS app
         script: |
           VERSION="${CM_TAG#v}"
           cd app && flutter build macos --release --build-name="$VERSION" --build-number="$BUILD_NUMBER"
-      - name: Sign, package and notarize
-        script: NOTARIZE=1 app/packaging/macos/build_dmg.sh
+      - *sign_and_notarize
       - name: Upload to GitHub release
         script: |
           set -e

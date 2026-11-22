@@ -76,6 +76,8 @@ python3 branding/generate_icons.py
 3. GitHub Actions builds the Windows installer, portable zip and (once configured) MSIX, plus the Linux AppImage, `.deb` and `.tar.gz`, and attaches them to the release.
 4. Codemagic's `macos-release` workflow builds, signs, notarizes and uploads `ColorContrastChecker-macOS.dmg` to the same release.
 
+To test macOS signing without publishing anything, run the `macos-signed` workflow in Codemagic. It produces a notarized DMG as a build artifact.
+
 The website links to `releases/latest/download/<file>`, so download links never need updating.
 
 ## License
